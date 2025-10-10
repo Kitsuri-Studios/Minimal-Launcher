@@ -28,9 +28,12 @@ class GamePackageManager private constructor(private val context: Context) {
         "libc++_shared.so",
         "libfmod.so",
         "libMediaDecoders_Android.so",
-        "libpairipcore.so",
         "libmaesdk.so",
         "libminecraftpe.so"
+    )
+
+    private val systemLoadLibs = arrayOf(
+        "libpairipcore.so"
     )
 
     init {
@@ -193,17 +196,20 @@ class GamePackageManager private constructor(private val context: Context) {
      */
     fun loadLibrary(name: String): Boolean {
         val libFile = File(nativeLibDir, if (name.startsWith("lib")) name else "lib$name.so")
+        val cleanName = name.removePrefix("lib").removeSuffix(".so")
 
         return try {
-            if (libFile.exists()) {
+            if (systemLoadLibs.contains(libFile.name)) {
+                System.loadLibrary(cleanName)
+                Log.d(TAG, "Loaded $name as system library")
+            } else if (libFile.exists()) {
                 System.load(libFile.absolutePath)
                 Log.d(TAG, "Loaded $name")
-                true
             } else {
-                System.loadLibrary(name.removePrefix("lib").removeSuffix(".so"))
-                Log.d(TAG, "Loaded $name as system library")
-                true
+                System.loadLibrary(cleanName)
+                Log.d(TAG, "Loaded $name as system library (fallback)")
             }
+            true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load $name: ${e.message}")
             false
@@ -214,12 +220,9 @@ class GamePackageManager private constructor(private val context: Context) {
      * Load all required libraries in order
      */
     fun loadAllLibraries() {
-        loadLibrary("c++_shared")
-        loadLibrary("fmod")
-        loadLibrary("MediaDecoders_Android")
-        loadLibrary("pairipcore")
-        loadLibrary("maesdk")
-        loadLibrary("minecraftpe")
+        requiredLibs.forEach { lib ->
+            loadLibrary(lib)
+        }
     }
 
     /**
