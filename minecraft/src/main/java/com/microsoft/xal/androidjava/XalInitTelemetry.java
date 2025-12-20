@@ -1,21 +1,54 @@
 package com.microsoft.xal.androidjava;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
+import android.util.Log;
 
-import androidx.appcompat.app.AppCompatActivity;
 import com.microsoft.applications.events.HttpClient;
 
-/**
- * @author <a href="https://github.com/RadiantByte">RadiantByte</a>
- */
+public final class XalInitTelemetry {
 
-public class XalInitTelemetry extends AppCompatActivity {
-    static void initOneDS() {
-        System.loadLibrary("maesdk");
+    private static final String TAG = "XalInitTelemetry";
+    private static volatile boolean initialized = false;
+
+    private XalInitTelemetry() {
+        // No instances
     }
 
-    static void startHttpClient(Context context) throws PackageManager.NameNotFoundException {
-        new HttpClient(context);
+    /**
+     * Called from native (JNI).
+     * Must never throw.
+     */
+    public static void initOneDS(Context context) {
+        if (context == null) {
+            Log.e(TAG, "initOneDS called with null context");
+            return;
+        }
+
+        if (initialized) {
+            return;
+        }
+
+        synchronized (XalInitTelemetry.class) {
+            if (initialized) {
+                return;
+            }
+
+            try {
+                System.loadLibrary("maesdk");
+            } catch (UnsatisfiedLinkError e) {
+                Log.e(TAG, "Failed to load native library maesdk", e);
+                return;
+            }
+
+            try {
+                Context appContext = context.getApplicationContext();
+                new HttpClient(appContext);
+                initialized = true;
+                Log.i(TAG, "OneDS telemetry initialized successfully");
+            } catch (Throwable t) {
+                // Catch Throwable to protect boundary
+                Log.e(TAG, "OneDS initialization failed", t);
+            }
+        }
     }
 }

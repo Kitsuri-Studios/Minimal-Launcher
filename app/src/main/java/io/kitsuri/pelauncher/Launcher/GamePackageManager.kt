@@ -29,11 +29,13 @@ class GamePackageManager private constructor(private val context: Context) {
         "libfmod.so",
         "libMediaDecoders_Android.so",
         "libmaesdk.so",
+        "libHttpClient.Android.so",
         "libminecraftpe.so"
     )
 
     private val systemLoadLibs = arrayOf(
-        "libpairipcore.so"
+        "libpairipcore.so",
+        "libPlayFabMultiplayer.so"
     )
 
     init {
