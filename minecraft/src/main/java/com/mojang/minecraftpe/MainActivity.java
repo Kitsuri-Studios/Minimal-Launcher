@@ -97,7 +97,7 @@ public class MainActivity extends GameActivity implements View.OnKeyListener, Fi
     private TextToSpeech textToSpeechManager;
     private Thread mMainThread = null;
     public int virtualKeyboardHeight = 0;
-
+   TextInputProxyEditTextbox textInputWidget;
     int keyboardHeight = 0;
     private boolean _fromOnCreate = false;
     private boolean mCursorLocked = false;
@@ -1632,6 +1632,28 @@ public class MainActivity extends GameActivity implements View.OnKeyListener, Fi
         return applicationContext.getPackageManager().getLaunchIntentForPackage(applicationContext.getPackageName());
     }
 
+        public void setTextBoxSelection(final int i, final int i2) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                int i3 = i;
+                int i4 = i2;
+                int length = MainActivity.this.keyboardInput.getText().toString().length();
+                if (i3 < 0 || i3 > length) {
+                    i3 = length;
+                }
+                if (i4 < i3) {
+                    i4 = i3;
+                } else if (i4 > length) {
+                    i4 = length;
+                }
+                MainActivity.this.mPauseTextboxUIUpdates = true;
+                MainActivity.this.keyboardInput.setSelection(i3, i4);
+                MainActivity.this.mPauseTextboxUIUpdates = false;
+            }
+        });
+    }
+    
     boolean hasHardwareChanged() {
         final SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         final String string = defaultSharedPreferences.getString("lastAndroidVersion", "");
